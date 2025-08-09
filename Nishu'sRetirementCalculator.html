@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retirement Corpus Calculator</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #fff;
+        text-align: center;
+        padding: 20px;
+    }
+    .container {
+        max-width: 500px;
+        margin: auto;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0px 4px 20px rgba(0,0,0,0.4);
+    }
+    input, button {
+        padding: 10px;
+        margin: 8px;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        width: calc(100% - 20px);
+        background-color: #1f2c34;
+        color: #fff;
+    }
+    button {
+        background: #ff9800;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+    button:hover {
+        background: #e68900;
+    }
+    .results {
+        margin-top: 20px;
+        padding: 15px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .results.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>Retirement Corpus Calculator</h2>
+    <input type="number" id="monthlyExpense" placeholder="Current Monthly Expense (₹)">
+    <input type="number" id="currentAge" placeholder="Current Age">
+    <input type="number" id="retirementAge" placeholder="Retirement Age">
+    <input type="number" id="yearsOfSalary" placeholder="Years of Annual Salary Needed">
+    <input type="number" id="inflationRate" placeholder="Inflation Rate (%)" value="8">
+    <input type="number" id="monthlyInvestment" placeholder="Monthly SIP Amount (₹)">
+    <input type="number" id="cagr" placeholder="Expected CAGR (%)">
+    <input type="number" id="investmentYears" placeholder="Investment Years">
+    <input type="number" id="stepUp" placeholder="Annual SIP Step-up (%)">
+    <button onclick="calculate()">Calculate</button>
+    
+    <div id="results" class="results"></div>
+</div>
+
+<script>
+function formatIndian(num) {
+    let absNum = Math.round(num);
+    let inWords = "";
+    if (absNum >= 10000000) {
+        inWords = (absNum / 10000000).toFixed(1) + " crores";
+    } else if (absNum >= 100000) {
+        inWords = (absNum / 100000).toFixed(1) + " lakhs";
+    } else {
+        inWords = absNum.toLocaleString('en-IN');
+    }
+    return absNum.toLocaleString('en-IN') + " (" + inWords + ")";
+}
+
+function calculate() {
+    let monthlyExpense = parseFloat(document.getElementById("monthlyExpense").value);
+    let currentAge = parseInt(document.getElementById("currentAge").value);
+    let retirementAge = parseInt(document.getElementById("retirementAge").value);
+    let yearsOfSalary = parseInt(document.getElementById("yearsOfSalary").value);
+    let inflationRate = parseFloat(document.getElementById("inflationRate").value) / 100;
+    let monthlyInvestment = parseFloat(document.getElementById("monthlyInvestment").value);
+    let cagr = parseFloat(document.getElementById("cagr").value) / 100;
+    let investmentYears = parseInt(document.getElementById("investmentYears").value);
+    let stepUp = parseFloat(document.getElementById("stepUp").value) / 100;
+
+    let yearsToRetirement = retirementAge - currentAge;
+    let monthlyExpenseFuture = monthlyExpense * Math.pow(1 + inflationRate, yearsToRetirement);
+    let annualExpenseFuture = monthlyExpenseFuture * 12;
+    let targetCorpus = annualExpenseFuture * yearsOfSalary;
+
+    // SIP Future Value with step-up
+    let totalInvested = 0;
+    let futureValue = 0;
+    let currentSIP = monthlyInvestment;
+
+    for (let year = 1; year <= investmentYears; year++) {
+        for (let month = 1; month <= 12; month++) {
+            futureValue = (futureValue + currentSIP) * (1 + cagr / 12);
+            totalInvested += currentSIP;
+        }
+        currentSIP *= (1 + stepUp);
+    }
+
+    let resultsDiv = document.getElementById("results");
+    resultsDiv.innerHTML = `
+        <p>Future Monthly Expense: <b>${formatIndian(monthlyExpenseFuture)}</b></p>
+        <p>Future Annual Expense: <b>${formatIndian(annualExpenseFuture)}</b></p>
+        <p>Required Corpus: <b>${formatIndian(targetCorpus)}</b></p>
+        <p>Total Invested Amount: <b>${formatIndian(totalInvested)}</b></p>
+        <p>Future Value of Investments: <b>${formatIndian(futureValue)}</b></p>
+    `;
+
+    resultsDiv.classList.add("show");
+}
+</script>
+</body>
+</html>
